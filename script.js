@@ -1,19 +1,68 @@
-const numberBtns = document.querySelectorAll('.number');
 const numDisplay = document.querySelector('#numdisplay');
-const clearBtn = document.querySelector('#clear');
-const signBtn = document.querySelector('#sign');
 
-clearBtn.addEventListener('click', resetCalc);
-signBtn.addEventListener('click', changeSign);
-
+let num1;
+let num2;
 let displayNum = "";
-let firstNumber;
-let secondNumber;
 let heldOperator;
-let clearState = true;
+let lockState = false;
 
+document.getElementById('calcbtns').addEventListener('click', (event) => {
+    //console.log(event.target.className);
+    switch(event.target.className){
+        case('operator'):
+            checkStoreOperator(event.target.textContent);
+            
+            if (heldOperator && num2) {
+                num2=displayNum;
+                console.log(num1, num2, event.target.textContent);
+
+                let answer = operate(num1, num2, event.target.textContent);
+
+                if (!(isInt(answer))){
+                    answer = Number.parseFloat(answer).toFixed(2);
+                }
+
+                num1 = answer;
+                numDisplay.textContent = answer;
+
+                //mini reset
+                num2="";
+                lockState=false;
+            }
+
+            break;
+        
+        case('number'):
+
+            lockNumAndOperator(); //first number pressed after valid operator is captured
+            
+            if (numDisplay.textContent==='0' && event.target.textContent ==='0'){
+                break;
+            }
+            setDisplayNumber(event.target.textContent);
+            
+            if (checkDisplayLength(displayNum)) //max size of screen;
+            {
+                numDisplay.textContent=displayNum;
+            }
+            break;
+
+        case('miscbtn'):
+            if(event.target.textContent==='+/-'){
+                changeSign();
+            }
+            if(event.target.textContent==='AC'){
+                resetCalc();
+            }
+            break;
+    }
+});
 
 function operate(num1, num2, operator){
+    if (operator==='=' && heldOperator) {
+        operator=heldOperator;
+        heldOperator="";
+    }
     if (operator==='+'){ //add instead of concat strings
         return String(convertNumType(num1) + convertNumType(num2));
     }
@@ -25,7 +74,8 @@ function operate(num1, num2, operator){
     }
     else if(operator==='/'){
         if (num2==0){
-            alert("ERROR");
+            alert("BEEP BOOP. ERROR. Human, trying to divide by zero will break me. RESETTING IN 5, 4, 3, 2, 1..");
+            window.location.reload();
         }
         else {
         return String(num1/num2);
@@ -40,140 +90,110 @@ function operate(num1, num2, operator){
 }
 
 
-numberBtns.forEach((button) => { button.addEventListener('click', setDisplayNumber) });
-
-function setDisplayNumber(){ //concatenate strings to display button presses
-    if (clearState){
-        clearState=false;
-        numDisplay.textContent="";
-        displayNum="";
+function checkDisplayLength(str){
+    if (str.length<=9){
+        return true;
     }
-    if (numDisplay.textContent.length>8){ //maximum length of display, store overflow number
-        displayNum+=this.textContent;
-        return;
+    else {
+        return false;
     }
-    numDisplay.textContent+= this.textContent;
-    displayNum+=this.textContent;
-
-//     if(firstNumber || firstNumber === 0){ //firstnumber exists, it means we passed the first call.
-//         //this will only execute if we click a number between operator presses
-//         //when changing signs, make sure to return a string 0 to not mess this up
-//         numberBetweenOperator = true;
-//     }
-// 
 }
 
 
-const operatorBtns = document.querySelectorAll('.operator');
-operatorBtns.forEach((operator) => { operator.addEventListener('click', executeMath)});
+function setDisplayNumber(textNum){ //concatenate strings to display button presses
+    displayNum+=textNum;
+}
 
-function executeMath(){
-    let passedInOperator = this.textContent;
 
-    if(firstNumber===undefined){ //first call only
-        firstCall(passedInOperator);
+function changeSign(){
+    let tempVar = String(-displayNum);
+
+    if (tempVar==='0' && !(displayNum)){ //empty calculator clause;
         return;
     }
-
-    if (heldOperator && heldOperator!=='=' && passedInOperator){
-        secondNumber = displayNum;
-    }
-
-    console.log(firstNumber, secondNumber, heldOperator);
-
-    if(secondNumber){
-        if(passedInOperator){
-            //reverse scientific notation check
-            // let arr = [firstNumber, secondNumber];
-            // arr = reverseSciNotation(arr);
-            // firstNumber = arr[0];
-            // secondNumber = arr[1];
-            firstNumber = operate(firstNumber, secondNumber, heldOperator);
-
-            //truncate decimals
-            firstNumber = decimalCheck(firstNumber);
-
-            //truncate very large and small numbers with scientific notation
-            //firstNumber = sciNotationCheck(firstNumber);
-
-            if (firstNumber.length>8){
-                firstNumber=NaN;
-            }
-
-            numDisplay.textContent = firstNumber;
-
-            secondNumber = null; //vars to reset
-            clearState = true;
-            displayNum = "";
-
-            if(passedInOperator=='='){
-                heldOperator = null;
-                return;
-            }
-            else { //only keep the operator if not '='
-                heldOperator = passedInOperator;
-            }
+    if(checkDisplayLength(tempVar)){ 
+        //if adding a negative sign makes it over 9 length
+        //do not execute
+        if (num1 && lockState==false){
+            //after first execution, num1 is defined and carried
+            //both are valid operators til number is pressed (lockstate)
+            num1=String(-num1);
+            numDisplay.textContent = num1;
+            return;
         }
-    }
-    else { //do nothing but update the operator if no additional numbers were entered between
-        heldOperator = passedInOperator;
-    }
-}
-
-function firstCall(passedInOperator){
-    heldOperator = passedInOperator;
-    if (displayNum===""){
-        firstNumber = 0;
+        displayNum = String(-displayNum);
+        numDisplay.textContent = displayNum;
+        console.
+        return;
     }
     else {
-        firstNumber = displayNum;
-    }
-    clearState = true;
-    displayNum = "";
-}
-
-function convertNumType(num){
-    if (num==parseInt(num)){
-        return parseInt(num);
-    }
-    else {
-        return parseFloat(num);
+        alert("ERROR, screen size limit reached");
+        return;
     }
 }
 
 function resetCalc(){
-    displayNum = "";
-    firstNumber = undefined;
-    heldOperator = null;
-    numDisplay.textContent = 0;
-    clearState = true;
+    //easier than resetting variables.
+    window.location.reload();
 }
 
-function changeSign(){
-    let tempVar = convertNumType(numDisplay.textContent);
-    let tempVar2 = convertNumType(numDisplay.textContent);
-    // if (tempVar===0){ //return a string '0' to not cause logic bug with checking operators
-    //     numDisplay.textContent = String(tempVar);
-    //     displayNum = String(tempVar);
-    //     if(tempVar==
-    // }
-    tempVar = -tempVar;
-    numDisplay.textContent = String(tempVar);
-    displayNum = String(tempVar);
-    if(firstNumber==tempVar2){
-        firstNumber=String(tempVar);
+function checkStoreOperator(operator){
+    if(lockState){
+        return;
+    }
+    if(!heldOperator || !num2){ 
+        //if num2 doesnt exist (clicking multiple operators)
+        if(operator==='='){
+            console.log(heldOperator);
+            return;
+        }
+        else {
+            heldOperator = operator;
+            console.log(heldOperator);
+            return;
+        }
     }
 }
 
-function decimalCheck(num){
-    if(num==parseInt(num)){//cant use strict because num is a string
-        return num;
+
+function lockNumAndOperator(){
+    if (lockState){
+        return;
+    }
+    if(heldOperator){
+        if (!num1) {
+            if (displayNum==""){ //clicking an operator with blank screen
+                num1='0';
+            }
+            else {
+                num1=displayNum;
+            }
+        }
+        num2='0';
+        displayNum="";
+        lockState = true;
+    }
+}
+
+function convertNumType(strNum){
+    if (isInt(strNum)){
+        return parseInt(strNum);
     }
     else {
-        return Number.parseFloat(num).toFixed(3);
+        return parseFloat(strNum);
     }
 }
 
+function isInt(strNum){
+    if (strNum==parseInt(strNum)){
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+/*
 function sciNotationCheck(num){
     if(num.length>9){
         let expo = 0;
@@ -228,3 +248,5 @@ function reverseSciNotation(arr){
     }
     return arr;
 }
+
+*/
