@@ -18,8 +18,12 @@ document.getElementById('calcbtns').addEventListener('click', (event) => {
 
                 let answer = operate(num1, num2, event.target.textContent);
 
-                if (!(isInt(answer))){
+                if (!(isInt(answer))){ 
                     answer = Number.parseFloat(answer).toFixed(2);
+                }
+
+                if (!(checkDisplayLength(answer))){ //answer is too long, set to NaN
+                    answer = NaN;
                 }
 
                 num1 = answer;
