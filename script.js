@@ -25,7 +25,7 @@ function operate(num1, num2, operator){
     }
     else if(operator==='/'){
         if (num2==0){
-            return;
+            alert("ERROR");
         }
         else {
         return String(num1/num2);
@@ -88,14 +88,7 @@ function executeMath(){
             // arr = reverseSciNotation(arr);
             // firstNumber = arr[0];
             // secondNumber = arr[1];
-
             firstNumber = operate(firstNumber, secondNumber, heldOperator);
-            
-            if (firstNumber===undefined) {//divide by zero return error;
-                alert("ERROR, divide by 0. Don't you dare do it again");
-                resetCalc();
-                return;
-            }
 
             //truncate decimals
             firstNumber = decimalCheck(firstNumber);
@@ -150,9 +143,8 @@ function convertNumType(num){
 
 function resetCalc(){
     displayNum = "";
-    firstNumber = null;
+    firstNumber = undefined;
     heldOperator = null;
-    numberBetweenOperator = false;
     numDisplay.textContent = 0;
     clearState = true;
 }
